@@ -7,6 +7,11 @@ LICENSE = "CLOSED"
 
 INHIBIT_DEFAULT_DEPS = "1"
 
+# tailscale ships pre-built binaries, so stripping and debug-split would fail
+# because binutils cross tools are not in the sysroot.
+INHIBIT_PACKAGE_STRIP = "1"
+INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
+
 ARCH_DIR ?= "Unsupported"
 ARCH_DIR:i386 = "386"
 ARCH_DIR:x86-64 = "amd64"
@@ -18,8 +23,7 @@ SRC_URI = "https://pkgs.tailscale.com/stable/tailscale_${PV}_${ARCH_DIR}.tgz;sub
 
 inherit systemd
 
-# These are needed to do the package splitting
-DEPENDS:append = " virtual/${HOST_PREFIX}gcc virtual/${HOST_PREFIX}compilerlibs virtual/libc"
+# Pre-built binaries — no compiler needed, no stripping or debug splitting.
 # Runtime dependencies, iptables required.
 RDEPENDS:${PN} = "iptables"
 
@@ -37,7 +41,7 @@ SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE:${PN} = "tailscaled.service"
 SYSTEMD_AUTO_ENABLE = "enable"
 
-S = "${WORKDIR}/${PN}-${PV}/${PN}_${PV}_${ARCH_DIR}"
+S = "${UNPACKDIR}/${PN}-${PV}/${PN}_${PV}_${ARCH_DIR}"
 
 do_install() {
   install -d ${D}/${bindir}
