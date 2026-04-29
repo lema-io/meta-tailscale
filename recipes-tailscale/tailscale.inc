@@ -41,6 +41,15 @@ SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE:${PN} = "tailscaled.service"
 SYSTEMD_AUTO_ENABLE = "enable"
 
+# UNPACKDIR was introduced in Styhead (5.1) and its absence in previous versions (e.g. Scarthgap 5.0) leaves S
+# unexpanded, causing do_unpack to fail. Conditionally setting it ensures compatibility with older versions and avoids
+# interfering with Whinlatter (5.3) and later where the WORKDIR auto-move shim is removed and UNPACKDIR is mandatory.
+# See: https://docs.yoctoproject.org/dev/migration-guides/migration-5.3.html#workdir-changes.
+python () {
+  if not d.getVar("UNPACKDIR"):
+    d.setVar("UNPACKDIR", "${WORKDIR}")
+}
+
 S = "${UNPACKDIR}/${PN}-${PV}/${PN}_${PV}_${ARCH_DIR}"
 
 do_install() {
