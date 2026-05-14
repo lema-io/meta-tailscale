@@ -1,0 +1,51 @@
+name: Update Tailscale recipe
+
+on:
+  schedule:
+    # Run every day at midnight UTC
+    - cron: 0 0 * * *
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run update script
+        id: update
+        run: |
+          .github/scripts/generate_updated_recipe.sh
+
+          if [[ -f /tmp/tailscale_update_env ]]; then
+            cat /tmp/tailscale_update_env >> "$GITHUB_ENV"
+            echo "updated=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create pull request
+        if: steps.update.outputs.updated == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="tailscale-${NEW_VERSION}"
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "${BRANCH}"
+          git add "recipes-tailscale/tailscale_${NEW_VERSION}.bb"
+          git commit -m "tailscale: update ${PREVIOUS_VERSION} -> ${NEW_VERSION}"
+          git push origin "${BRANCH}"
+
+          gh pr create \
+            --title "tailscale: update ${PREVIOUS_VERSION} -> ${NEW_VERSION}" \
+            --body "" \
+            --head "${BRANCH}" \
+            --base master

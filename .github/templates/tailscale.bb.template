@@ -1,0 +1,7 @@
+require tailscale.inc
+
+# Find checksum with: https://pkgs.tailscale.com/stable/tailscale_${PV}_${ARCH_DIR}.tgz.sha256
+SRC_URI[386.sha256sum]       = "@@SHA256_386@@"
+SRC_URI[amd64.sha256sum]     = "@@SHA256_AMD64@@"
+SRC_URI[arm.sha256sum]       = "@@SHA256_ARM@@"
+SRC_URI[arm64.sha256sum]     = "@@SHA256_ARM64@@"
